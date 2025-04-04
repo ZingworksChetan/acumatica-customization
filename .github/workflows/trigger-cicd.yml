@@ -25,8 +25,27 @@ jobs:
 
       - name: Trigger CI/CD in `acumatica-cicd-pipeline`
         if: env.FOLDER != ''
+        shell: pwsh
         run: |
-          curl -X POST -H "Authorization: token ${{ secrets.CICD_REPO_PAT }}" \
-            -H "Accept: application/vnd.github.v3+json" \
-            https://api.github.com/repos/ZingworksChetan/acumatica-cicd-pipeline/actions/workflows/main.yml/dispatches \
-            -d '{"ref": "main", "inputs": { "versionName": "'${{ env.FOLDER }}'" }}'
+          $headers = @{
+            "Authorization" = "token ${{ secrets.CICD_REPO_PAT }}"
+            "Accept" = "application/vnd.github.v3+json"
+          }
+          $body = @{
+            ref = "main"
+           inputs = @{ versionName = "${{ env.FOLDER }}" }
+          } | ConvertTo-Json -Compress
+          Invoke-RestMethod -Uri "https://api.github.com/repos/ZingworksChetan/acumatica-cicd-pipeline/actions/workflows/main.yml/dispatches" `
+                            -Method Post `
+                            -Headers $headers `
+                            -Body $body `
+                            -ContentType "application/json"
+
+
+      # - name: Trigger CI/CD in `acumatica-cicd-pipeline`
+      #   if: env.FOLDER != ''
+      #   run: |
+      #     curl -X POST -H "Authorization: token ${{ secrets.CICD_REPO_PAT }}" \
+      #       -H "Accept: application/vnd.github.v3+json" \
+      #       https://api.github.com/repos/ZingworksChetan/acumatica-cicd-pipeline/actions/workflows/main.yml/dispatches \
+      #       -d '{"ref": "main", "inputs": { "versionName": "'${{ env.FOLDER }}'" }}'
