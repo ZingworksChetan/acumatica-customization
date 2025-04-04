@@ -12,6 +12,7 @@ jobs:
     steps:
       - name: Extract New Customization Folder
         id: extract_folder
+        shell: bash
         run: |
           FOLDER=$(git diff --name-only ${{ github.event.before }} ${{ github.event.after }} | grep -oE '^Customization/[^/]+' | uniq | sed 's|Customization/||')
           echo "Detected folder: $FOLDER"
