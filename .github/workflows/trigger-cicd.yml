@@ -32,9 +32,9 @@ jobs:
             "Accept" = "application/vnd.github.v3+json"
           }
           $body = @{
-             event_type = "trigger-deployment"
-             client_payload = @{ versionName = "${{ env.FOLDER }}" }
-          } | ConvertTo-Json -Depth 2
+              ref = "main"
+              inputs = @{ versionName = "${{ env.FOLDER }}" }
+          } | ConvertTo-Json -Compress
 
           Invoke-RestMethod -Uri "https://api.github.com/repos/ZingworksChetan/acumatica-cicd-pipeline/actions/workflows/main.yml/dispatches" `
                             -Method Post `
