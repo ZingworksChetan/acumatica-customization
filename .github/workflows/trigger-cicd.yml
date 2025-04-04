@@ -1,0 +1,26 @@
+name: Trigger CI/CD Pipeline
+
+on:
+  push:
+    paths:
+      - 'Customization/**'  # Trigger when anything inside Customization changes
+
+jobs:
+  trigger_cicd:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Extract New Customization Folder
+        id: extract_folder
+        run: |
+          FOLDER=$(git diff --name-only ${{ github.event.before }} ${{ github.event.after }} | grep -oE '^Customization/[^/]+' | uniq | sed 's|Customization/||')
+          echo "Detected folder: $FOLDER"
+          echo "FOLDER=$FOLDER" >> $GITHUB_ENV
+
+      - name: Trigger CI/CD in `acumatica-cicd-pipeline`
+        if: env.FOLDER != ''
+        run: |
+          curl -X POST -H "Authorization: token ${{ secrets.CICD_REPO_PAT }}" \
+            -H "Accept: application/vnd.github.v3+json" \
+            https://api.github.com/repos/ZingworksChetan/acumatica-cicd-pipeline/actions/workflows/main.yml/dispatches \
+            -d '{"ref": "main", "inputs": { "versionName": "'${{ env.FOLDER }}'" }}'
