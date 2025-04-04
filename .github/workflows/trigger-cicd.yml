@@ -12,11 +12,11 @@ jobs:
     steps:
       - name: Extract New Customization Folder
         id: extract_folder
-        shell: bash
+        shell: pwsh
         run: |
-          FOLDER=$(git diff --name-only ${{ github.event.before }} ${{ github.event.after }} | grep -oE '^Customization/[^/]+' | uniq | sed 's|Customization/||')
+          $FOLDER = git diff --name-only ${{ github.event.before }} ${{ github.event.after }} | Select-String -Pattern "^Customization/[^/]+" | ForEach-Object { $_ -replace "Customization/", "" }
           echo "Detected folder: $FOLDER"
-          echo "FOLDER=$FOLDER" >> $GITHUB_ENV
+          echo "FOLDER=$FOLDER" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8
 
       - name: Trigger CI/CD in `acumatica-cicd-pipeline`
         if: env.FOLDER != ''
