@@ -42,6 +42,13 @@ jobs:
                             -ContentType "application/json"
 
 
+      - name: Debug VERSION_NAME
+        shell: pwsh
+        run: |
+          echo "VERSION_NAME=${{ env.FOLDER }}"
+
+
+
       # - name: Trigger CI/CD in `acumatica-cicd-pipeline`
       #   if: env.FOLDER != ''
       #   run: |
