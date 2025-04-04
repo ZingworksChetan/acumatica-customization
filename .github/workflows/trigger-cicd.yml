@@ -19,7 +19,7 @@ jobs:
         id: extract_folder
         shell: pwsh
         run: |
-          $FOLDER = git diff --name-only ${{ github.event.before }} ${{ github.event.after }} | Select-String -Pattern "^Customization/[^/]+" | ForEach-Object { $_ -replace "Customization/", "" }
+          $FOLDER = git diff --name-only ${{ github.event.before }} ${{ github.event.after }} | Select-String -Pattern "^Customization/([^/]+)/" | ForEach-Object { $_.Matches.Groups[1].Value } | Select-Object -Unique
           echo "Detected folder: $FOLDER"
           echo "FOLDER=$FOLDER" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8
 
