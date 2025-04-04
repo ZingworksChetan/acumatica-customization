@@ -28,7 +28,7 @@ jobs:
         shell: pwsh
         run: |
           $headers = @{
-            "Authorization" = "token ${{ secrets.CICD_REPO_PAT }}"
+            "Authorization" = "token ${{ secrets.CICDTOKEN }}"
             "Accept" = "application/vnd.github.v3+json"
           }
           $body = @{
