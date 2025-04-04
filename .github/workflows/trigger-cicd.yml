@@ -10,6 +10,11 @@ jobs:
     runs-on: self-hosted
 
     steps:
+      - name: Checkout Repository with Full History
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
       - name: Extract New Customization Folder
         id: extract_folder
         shell: pwsh
