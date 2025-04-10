@@ -60,7 +60,8 @@ jobs:
           Write-Host "📂 Extracted folders: $($folders -join ', ')"
 
           foreach ($folder in $folders) {
-            if (Test-Path "Customization/$folder") {
+            $fullPath = Join-Path -Path "Customization" -ChildPath $folder
+            if (Test-Path -LiteralPath $fullPath) {
               Write-Host "Found valid customization folder: $folder"
               echo "VERSION_NAME=$folder" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8
               exit 0
