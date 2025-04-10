@@ -15,13 +15,33 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Extract New Customization Folder
+      # - name: Extract New Customization Folder
+      #   id: extract_folder
+      #   shell: pwsh
+      #   run: |
+      #     $FOLDER = git diff --name-only ${{ github.event.before }} ${{ github.event.after }} | Select-String -Pattern "^Customization/([^/]+)/" | ForEach-Object { $_.Matches.Groups[1].Value } | Select-Object -Unique
+      #     echo "Detected folder: $FOLDER"
+      #     echo "FOLDER=$FOLDER" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8
+
+      - name: Extract Customization Folder (Only If Still Exists)
         id: extract_folder
         shell: pwsh
         run: |
-          $FOLDER = git diff --name-only ${{ github.event.before }} ${{ github.event.after }} | Select-String -Pattern "^Customization/([^/]+)/" | ForEach-Object { $_.Matches.Groups[1].Value } | Select-Object -Unique
-          echo "Detected folder: $FOLDER"
-          echo "FOLDER=$FOLDER" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8
+           $changedFolders = git diff --name-only ${{ github.event.before }} ${{ github.event.after }} |
+            Select-String -Pattern "^Customization/([^/]+)/" |
+            ForEach-Object { $_.Matches.Groups[1].Value } |
+            Select-Object -Unique
+
+           foreach ($folder in $changedFolders) 
+           {
+             $fullPath = Join-Path -Path "${{ github.workspace }}/Customization" -ChildPath $folder
+             if (Test-Path $fullPath) 
+             {
+              echo "Folder still exists: $folder"
+              echo "FOLDER=$folder" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8
+              break
+             }
+           }
 
       - name: Trigger CI/CD in `acumatica-cicd-pipeline`
         if: env.FOLDER != ''
