@@ -51,6 +51,14 @@ jobs:
           Write-Host "⚠️ No valid customization folder found (all may be deleted)"
           echo "VERSION_NAME=" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8
 
+      - name: Debug - Show changed files
+        shell: pwsh
+        run: |
+          Write-Host "Files from diff:"
+          git diff --name-only ${{ github.event.before }} ${{ github.event.after }}
+
+          Write-Host "`nFiles from latest commit (HEAD):"
+          git show --name-only --pretty="" HEAD
 
       - name: Trigger CI/CD in `acumatica-cicd-pipeline`
         if: env.VERSION_NAME != ''
