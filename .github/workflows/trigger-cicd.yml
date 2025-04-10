@@ -23,27 +23,34 @@ jobs:
       #     echo "Detected folder: $FOLDER"
       #     echo "FOLDER=$FOLDER" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8
 
-      - name: Detect latest customization folder (if exists)
+      - name: Detect latest customization folder (with fallback)
         id: detect_folder
         shell: pwsh
         run: |
-          # Get the list of changed folders under Customization/
-          $changedFolders = git diff --name-only ${{ github.event.before }} ${{ github.event.after }} |
+          # Try to get diff between commits
+          $diffFiles = git diff --name-only ${{ github.event.before }} ${{ github.event.after }}
+
+          if (-not $diffFiles) {
+           Write-Host "⚠️ git diff is empty, using fallback to get latest commit files"
+            $diffFiles = git show --name-only --pretty="" HEAD
+          }
+
+          $changedFolders = $diffFiles |
             Select-String -Pattern '^Customization/([^/]+)/' |
             ForEach-Object { $_.Matches.Groups[1].Value } |
             Sort-Object -Unique
 
-          # Loop through changed folders and find the one that still exists
           foreach ($folder in $changedFolders) {
             if (Test-Path "Customization/$folder") {
-              echo "Detected valid customization folder: $folder"
+              Write-Host "✅ Found valid customization folder: $folder"
               echo "VERSION_NAME=$folder" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8
               exit 0
             }
           }
 
-          echo "⚠️ No valid customization folder found (all may be deleted)"
+          Write-Host "⚠️ No valid customization folder found (all may be deleted)"
           echo "VERSION_NAME=" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8
+
 
       - name: Trigger CI/CD in `acumatica-cicd-pipeline`
         if: env.VERSION_NAME != ''
