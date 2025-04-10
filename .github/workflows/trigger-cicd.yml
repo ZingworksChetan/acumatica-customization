@@ -1,4 +1,4 @@
-name: Trigger CI/CD Pipeline
+﻿name: Trigger CI/CD Pipeline
 
 on:
   push:
@@ -23,33 +23,30 @@ jobs:
       #     echo "Detected folder: $FOLDER"
       #     echo "FOLDER=$FOLDER" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8
 
-      - name: Extract New Customization Folder
-        id: extract_folder
+      - name: Detect latest customization folder (if exists)
+        id: detect_folder
         shell: pwsh
         run: |
-          $diffFiles = git diff --name-only ${{ github.event.before }} ${{ github.event.after }}
-    
-          if (-not $diffFiles) {
-            # fallback for initial push or empty diff
-            Write-Host "No diff found, using fallback to get last commit"
-            $diffFiles = git show --pretty="" --name-only
+          # Get the list of changed folders under Customization/
+          $changedFolders = git diff --name-only ${{ github.event.before }} ${{ github.event.after }} |
+            Select-String -Pattern '^Customization/([^/]+)/' |
+            ForEach-Object { $_.Matches.Groups[1].Value } |
+            Sort-Object -Unique
+
+          # Loop through changed folders and find the one that still exists
+          foreach ($folder in $changedFolders) {
+            if (Test-Path "Customization/$folder") {
+              echo "Detected valid customization folder: $folder"
+              echo "VERSION_NAME=$folder" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8
+              exit 0
+            }
           }
 
-           $FOLDER = $diffFiles |
-            Select-String -Pattern "^Customization/([^/]+)/" |
-            ForEach-Object { $_.Matches.Groups[1].Value } |
-            Select-Object -First 1
-
-          if ($FOLDER) {
-            echo "Detected folder: $FOLDER"
-            echo "FOLDER=$FOLDER" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8
-           } else {
-             echo "No customization folder found in changed files."
-             echo "FOLDER=" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8
-           }
+          echo "⚠️ No valid customization folder found (all may be deleted)"
+          echo "VERSION_NAME=" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8
 
       - name: Trigger CI/CD in `acumatica-cicd-pipeline`
-        if: env.FOLDER != ''
+        if: env.VERSION_NAME != ''
         shell: pwsh
         run: |
           $headers = @{
@@ -58,7 +55,7 @@ jobs:
           }
           $body = @{
               ref = "main"
-              inputs = @{ versionName = "${{ env.FOLDER }}" }
+              inputs = @{ versionName = "${{ env.VERSION_NAME }}" }
           } | ConvertTo-Json -Compress
 
           Invoke-RestMethod -Uri "https://api.github.com/repos/ZingworksChetan/acumatica-cicd-pipeline/actions/workflows/main.yml/dispatches" `
@@ -71,7 +68,7 @@ jobs:
       - name: Debug VERSION_NAME
         shell: pwsh
         run: |
-          echo "VERSION_NAME=${{ env.FOLDER }}"
+          echo "VERSION_NAME=${{ env.VERSION_NAME }}"
 
 
 
