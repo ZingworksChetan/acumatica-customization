@@ -32,11 +32,9 @@ jobs:
             ForEach-Object { $_.Matches.Groups[1].Value } |
             Select-Object -Unique
 
-           foreach ($folder in $changedFolders) 
-           {
+           foreach ($folder in $changedFolders) {
              $fullPath = Join-Path -Path "${{ github.workspace }}/Customization" -ChildPath $folder
-             if (Test-Path $fullPath) 
-             {
+             if (Test-Path $fullPath) {
               echo "Folder still exists: $folder"
               echo "FOLDER=$folder" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8
               break
