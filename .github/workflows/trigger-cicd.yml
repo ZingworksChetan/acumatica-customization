@@ -27,6 +27,9 @@ jobs:
         id: detect_folder
         shell: pwsh
         run: |
+    
+          cd $env:GITHUB_WORKSPACE
+
           $diffFiles = git diff --name-only ${{ github.event.before }} ${{ github.event.after }}
 
           if (-not $diffFiles) {
@@ -56,6 +59,12 @@ jobs:
 
           Write-Host "⚠️ No valid customization folder found (all may be deleted)"
           echo "VERSION_NAME=" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8
+
+      - name: Debug Folder Existence
+        shell: pwsh
+        run: |
+          cd $env:GITHUB_WORKSPACE
+          Get-ChildItem Customization
 
       - name: Debug Extracted Folders
         shell: pwsh
