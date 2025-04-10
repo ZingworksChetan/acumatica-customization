@@ -42,6 +42,7 @@ jobs:
            $folders = @()
 
           foreach ($line in $diffFiles) {
+            $line = $line.Trim()
             if ($folderPattern.IsMatch($line)) {
               $folder = $folderPattern.Match($line).Groups[1].Value
               if (-not $folders.Contains($folder)) {
