@@ -23,24 +23,30 @@ jobs:
       #     echo "Detected folder: $FOLDER"
       #     echo "FOLDER=$FOLDER" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8
 
-      - name: Detect latest customization folder (with fallback)
+      - name: Detect latest customization folder (with fallback & fix)
         id: detect_folder
         shell: pwsh
         run: |
-          # Try to get diff between commits
           $diffFiles = git diff --name-only ${{ github.event.before }} ${{ github.event.after }}
 
           if (-not $diffFiles) {
-           Write-Host "⚠️ git diff is empty, using fallback to get latest commit files"
-            $diffFiles = git show --name-only --pretty="" HEAD
+            Write-Host "⚠️ git diff is empty, using fallback to get latest commit files"
+             $diffFiles = git show --name-only --pretty="" HEAD
+           }
+
+           $folderPattern = [regex]'^Customization/([^/]+)/'
+           $folders = @()
+
+          foreach ($line in $diffFiles) {
+            if ($folderPattern.IsMatch($line)) {
+              $folder = $folderPattern.Match($line).Groups[1].Value
+              if (-not $folders.Contains($folder)) {
+                $folders += $folder
+              }
+            }
           }
 
-          $changedFolders = $diffFiles |
-            Select-String -Pattern '^Customization/([^/]+)/' |
-            ForEach-Object { $_.Matches.Groups[1].Value } |
-            Sort-Object -Unique
-
-          foreach ($folder in $changedFolders) {
+          foreach ($folder in $folders) {
             if (Test-Path "Customization/$folder") {
               Write-Host "✅ Found valid customization folder: $folder"
               echo "VERSION_NAME=$folder" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8
@@ -50,6 +56,11 @@ jobs:
 
           Write-Host "⚠️ No valid customization folder found (all may be deleted)"
           echo "VERSION_NAME=" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8
+
+      - name: Debug Extracted Folders
+        shell: pwsh
+        run: |
+          echo "Extracted folders: ${{ env.VERSION_NAME }}"
 
       - name: Debug - Show changed files
         shell: pwsh
