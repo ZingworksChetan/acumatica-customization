@@ -36,7 +36,13 @@ jobs:
            $diffRaw = git show --name-only --pretty="" HEAD
           }
 
-          $diffFiles = $diffRaw -split "`n"
+          Write-Host "🧾 Raw diff output:"
+          Write-Host $diffRaw
+
+          # Normalize lines
+          $diffFiles = $diffRaw -split "`r`n|`n|`r" | ForEach-Object { $_.Trim() }
+           Write-Host "🔍 Cleaned file paths:"
+           $diffFiles | ForEach-Object { Write-Host $_ }
 
            $folderPattern = [regex]'^Customization/([^/]+)/'
            $folders = @()
@@ -51,11 +57,15 @@ jobs:
             }
           }
 
+          Write-Host ""Extracted folders: $($folders -join ', ')"
+
           foreach ($folder in $folders) {
             if (Test-Path "Customization/$folder") {
-              Write-Host "✅ Found valid customization folder: $folder"
+              Write-Host "Found valid customization folder: $folder"
               echo "VERSION_NAME=$folder" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8
               exit 0
+            } else {
+              Write-Host "Folder $fullPath does not exist"
             }
           }
 
