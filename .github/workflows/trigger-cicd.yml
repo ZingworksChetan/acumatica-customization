@@ -23,22 +23,29 @@ jobs:
       #     echo "Detected folder: $FOLDER"
       #     echo "FOLDER=$FOLDER" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8
 
-      - name: Extract Customization Folder (Only If Still Exists)
+      - name: Extract New Customization Folder
         id: extract_folder
         shell: pwsh
         run: |
-           $changedFolders = git diff --name-only ${{ github.event.before }} ${{ github.event.after }} |
+          $diffFiles = git diff --name-only ${{ github.event.before }} ${{ github.event.after }}
+    
+          if (-not $diffFiles) {
+            # fallback for initial push or empty diff
+            Write-Host "No diff found, using fallback to get last commit"
+            $diffFiles = git show --pretty="" --name-only
+          }
+
+           $FOLDER = $diffFiles |
             Select-String -Pattern "^Customization/([^/]+)/" |
             ForEach-Object { $_.Matches.Groups[1].Value } |
-            Select-Object -Unique
+            Select-Object -First 1
 
-           foreach ($folder in $changedFolders) {
-             $fullPath = Join-Path -Path "${{ github.workspace }}/Customization" -ChildPath $folder
-             if (Test-Path $fullPath) {
-              echo "Folder still exists: $folder"
-              echo "FOLDER=$folder" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8
-              break
-             }
+          if ($FOLDER) {
+            echo "Detected folder: $FOLDER"
+            echo "FOLDER=$FOLDER" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8
+           } else {
+             echo "No customization folder found in changed files."
+             echo "FOLDER=" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8
            }
 
       - name: Trigger CI/CD in `acumatica-cicd-pipeline`
