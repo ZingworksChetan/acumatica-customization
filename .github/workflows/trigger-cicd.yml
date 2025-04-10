@@ -57,7 +57,7 @@ jobs:
             }
           }
 
-          Write-Host ""Extracted folders: $($folders -join ', ')"
+          Write-Host "📂 Extracted folders: $($folders -join ', ')"
 
           foreach ($folder in $folders) {
             if (Test-Path "Customization/$folder") {
