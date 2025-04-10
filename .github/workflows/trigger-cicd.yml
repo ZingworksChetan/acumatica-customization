@@ -30,12 +30,13 @@ jobs:
     
           cd $env:GITHUB_WORKSPACE
 
-          $diffFiles = git diff --name-only ${{ github.event.before }} ${{ github.event.after }}
+          $diffRaw = git diff --name-only ${{ github.event.before }} ${{ github.event.after }}
+          if (-not $diffRaw) {
+           Write-Host "⚠️ git diff is empty, using fallback to get latest commit files"
+           $diffRaw = git show --name-only --pretty="" HEAD
+          }
 
-          if (-not $diffFiles) {
-            Write-Host "⚠️ git diff is empty, using fallback to get latest commit files"
-             $diffFiles = git show --name-only --pretty="" HEAD
-           }
+          $diffFiles = $diffRaw -split "`n"
 
            $folderPattern = [regex]'^Customization/([^/]+)/'
            $folders = @()
