@@ -37,12 +37,12 @@ jobs:
           }
 
           Write-Host "🧾 Raw diff output:"
-          Write-Host $diffRaw
+          # Write-Host $diffRaw
 
           # Normalize lines
           $diffFiles = $diffRaw -split "`r`n|`n|`r" | ForEach-Object { $_.Trim() }
            Write-Host "🔍 Cleaned file paths:"
-           $diffFiles | ForEach-Object { Write-Host $_ }
+           # $diffFiles | ForEach-Object { Write-Host $_ }
 
            $folderPattern = [regex]'^Customization/([^/]+)/'
            $folders = @()
@@ -73,25 +73,25 @@ jobs:
           Write-Host "⚠️ No valid customization folder found (all may be deleted)"
           echo "VERSION_NAME=" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8
 
-      - name: Debug Folder Existence
-        shell: pwsh
-        run: |
-          cd $env:GITHUB_WORKSPACE
-          Get-ChildItem Customization
+      # - name: Debug Folder Existence
+      #   shell: pwsh
+      #   run: |
+      #     cd $env:GITHUB_WORKSPACE
+      #     Get-ChildItem Customization
 
       - name: Debug Extracted Folders
         shell: pwsh
         run: |
           echo "Extracted folders: ${{ env.VERSION_NAME }}"
 
-      - name: Debug - Show changed files
-        shell: pwsh
-        run: |
-          Write-Host "Files from diff:"
-          git diff --name-only ${{ github.event.before }} ${{ github.event.after }}
+      # - name: Debug - Show changed files
+      #   shell: pwsh
+      #   run: |
+      #     Write-Host "Files from diff:"
+      #     git diff --name-only ${{ github.event.before }} ${{ github.event.after }}
 
-          Write-Host "`nFiles from latest commit (HEAD):"
-          git show --name-only --pretty="" HEAD
+      #     Write-Host "`nFiles from latest commit (HEAD):"
+      #     git show --name-only --pretty="" HEAD
 
       - name: Trigger CI/CD in `acumatica-cicd-pipeline`
         if: env.VERSION_NAME != ''
@@ -113,10 +113,10 @@ jobs:
                             -ContentType "application/json"
 
 
-      - name: Debug VERSION_NAME
-        shell: pwsh
-        run: |
-          echo "VERSION_NAME=${{ env.VERSION_NAME }}"
+      # - name: Debug VERSION_NAME
+      #   shell: pwsh
+      #   run: |
+      #     echo "VERSION_NAME=${{ env.VERSION_NAME }}"
 
 
 
