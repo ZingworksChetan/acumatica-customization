@@ -56,7 +56,6 @@ jobs:
               Write-Host "Folder $fullPath does not exist"
             }
           }
-
           Write-Host "⚠️ No valid customization folder found (all may be deleted)"
           echo "VERSION_NAME=" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8
 
